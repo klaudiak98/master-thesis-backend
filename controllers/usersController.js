@@ -1,8 +1,34 @@
 const User = require('../model/User');
+const jwt = require('jsonwebtoken');
 
 const getAllUsers = async (req, res) => {
     const response = await User.find();
-    console.log(response);
+    res.json(response);
+}
+
+const getUserByEmail = async (req, res) => {
+    let email = '';
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET,
+        (err, decoded) => {
+            if (err) return res.sendStatus(403); //invalid token
+            email = decoded.UserInfo.email;
+        }
+    )
+
+    const users = await User.find();
+    const user = users.filter(u => u.email === email)[0];
+    if (!user) {
+        return res.status(400).json({"message": `User ${email} not found`});
+    }
+    const response = {
+        'email': user.email,
+        'name': user.name
+    }
     res.json(response);
 }
 /*
@@ -22,37 +48,27 @@ const createNewUser = (req, res) => {
     console.log(data.users);
     res.status(201).json(data.users);
 }
+*/
 
-const updateUser = (req, res) => {
-    const user = data.users.find(u => u.id === parseInt(req.body.id));
-
-    if (!user) {
-        return res.status(400).json({"message": `User ID ${id} not found`});
+const updateUser = async (req, res) => {
+    try {
+        await User.updateOne({'email': req.body.email}, {$set:{'name': req.body.name, 'password': req.body.password}});
+        res.status(200).json({'success':`The user ${req.body.email} has been changed!`});
+    } catch (err) {
+        res.status(500).json({'message': err.message});
     }
-
-    if (req.body.email) {user.email = req.body.email}
-    // poprawic -> sprawdzenie czy hasla sa poprane
-    if (req.body.password) {user.password = req.body.password}
-
-    const filteredArray = data.users.filter(u => u.id !== parseInt(req.body.id));
-    const unsortedArray = [...filteredArray, user];
-
-    data.setUsers(unsortedArray.sort((a,b) => a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-    res.json(data.users);
 }
 
-const deleteUser = (req, res) => {
-    const user = data.users.find(u => u.id === parseInt(req.body.id));
-
-    if (!user) {
-        return res.status(400).json({"message": `User ID ${id} not found`});
+const deleteUser = async (req, res) => {
+    try {
+        await User.deleteOne({email: req.body.email});
+        res.status(200).json({'success':`The user ${req.body.email} has been removed!`});
+    } catch (err){
+        res.status(500).json({'message': err.message});
     }
-
-    const filteredArray = data.users.filter(u => u.id !== parseInt(req.body.id));
-    data.setUsers([...filteredArray]);
-    res.json(data.users);
 }
 
+/*
 const getUser = (req, res) => {
     const user = data.users.find(u => u.id === parseInt(req.params.id));
     if (!user) {
@@ -64,8 +80,9 @@ const getUser = (req, res) => {
 
 module.exports = {
     getAllUsers,
+    getUserByEmail,
     // createNewUser,
-    // updateUser,
-    // deleteUser,
+    updateUser,
+    deleteUser,
     // getUser
 }
