@@ -1,3 +1,4 @@
+const Shelf = require('../model/Shelf');
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
 
@@ -10,14 +11,19 @@ const handleNewUser = async (req, res) => {
 
     try {
         const hashedPass = await bcrypt.hash(password, 10);
-        const result = await User.create({
+        const user = await User.create({
             'email': email,
             'name': name,
             'password': hashedPass
         });
 
-        console.log(result);
-        
+        const shelf = await Shelf.create({
+            'user': user._id,
+            'wantToRead': [],
+            'currentlyReading': [],
+            'read': []
+        });
+
         res.status(201).json({'success':`New user ${email} created!`});
     } catch (err) {
         res.status(500).json({'message': err.message});

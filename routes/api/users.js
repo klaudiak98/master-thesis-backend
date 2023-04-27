@@ -6,8 +6,6 @@ const verifyRoles = require('../../middleware/verifyRoles');
 
 router.route('/')
     .get(verifyRoles(ROLES_LIST.Admin),usersController.getAllUsers)
-    // .post(verifyRoles(ROLES_LIST.Admin), usersController.createNewUser)
-    // .delete(verifyRoles(ROLES_LIST.Admin), usersController.deleteUser);
 
 router.route('/update')
     .patch(verifyRoles(ROLES_LIST.Admin, ROLES_LIST.User),usersController.updateUser)
