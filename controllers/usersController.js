@@ -40,7 +40,7 @@ const getUserByEmail = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         await User.updateOne({'email': req.body.email}, {$set:{'name': req.body.name, 'password': req.body.password}});
-        res.status(200).json({'success':`The user ${req.body.email} has been changed!`});
+        res.status(200).json({'message':`The user ${req.body.email} has been changed!`});
     } catch (err) {
         res.status(500).json({'message': err.message});
     }
@@ -49,7 +49,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         await User.deleteOne({email: req.body.email});
-        res.status(200).json({'success':`The user ${req.body.email} has been removed!`});
+        res.status(200).json({'message':`The user ${req.body.email} has been removed!`});
     } catch (err){
         res.status(500).json({'message': err.message});
     }
