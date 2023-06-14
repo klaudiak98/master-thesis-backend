@@ -1,5 +1,6 @@
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const getAllUsers = async (req, res) => {
     const response = await User.find();
@@ -38,12 +39,34 @@ const getUserByEmail = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    try {
-        await User.updateOne({'email': req.body.email}, {$set:{'name': req.body.name, 'password': req.body.password}});
-        res.status(200).json({'message':`The user ${req.body.email} has been changed!`});
-    } catch (err) {
-        res.status(500).json({'message': err.message});
+    const newPassword = req.body?.password;
+
+    if (req.body.name && req.body.password && req.body.name.length && req.body.password.length) {
+        try {
+            const hashedPass = await bcrypt.hash(newPassword, 10);
+            await User.updateOne({'email': req.body.email}, {$set:{'name': req.body.name, 'password': hashedPass}});
+            res.status(200).json({'message':`The user ${req.body.email} has been changed!`});
+        } catch (err) {
+            res.status(500).json({'message': err.message});
+        }
+    } else if (req.body.name && req.body.name.length) {
+        try {
+            await User.updateOne({'email': req.body.email}, {$set:{'name': req.body.name}});
+            res.status(200).json({'message':`The user ${req.body.email} has been changed!`});
+        } catch (err) {
+            res.status(500).json({'message': err.message});
+        }
+    } else {
+        try {
+            const hashedPass = await bcrypt.hash(newPassword, 10);
+            await User.updateOne({'email': req.body.email}, {$set:{'password': hashedPass}});
+            res.status(200).json({'message':`The user ${req.body.email} has been changed!`});
+        } catch (err) {
+            res.status(500).json({'message': err.message});
+        }
     }
+
+
 }
 
 const deleteUser = async (req, res) => {
