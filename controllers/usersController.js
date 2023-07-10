@@ -65,8 +65,6 @@ const updateUser = async (req, res) => {
             res.status(500).json({'message': err.message});
         }
     }
-
-
 }
 
 const deleteUser = async (req, res) => {
